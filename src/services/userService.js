@@ -1,6 +1,72 @@
 const UserRepository = require('../repositories/userRepository');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 class UserService {
+    static async register(name, email, password) {
+        const existingUser = await UserRepository.findByEmail(email);
+        if (existingUser) {
+            throw new Error('Email sudah terdaftar');
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        const user = await UserRepository.create({
+            name,
+            email,
+            password: hashedPassword,
+            role: 'user'
+        });
+
+        return user;
+    }
+
+    static async login(email, password) {
+        const user = await UserRepository.findByEmail(email);
+
+        if (!user) {
+            throw new Error('Email atau password salah');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            throw new Error('Email atau password salah');
+        }
+
+        const payload = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: process.env.JWT_EXPIRES_IN,
+            algorithm: 'HS256'
+        });
+
+        return token;
+    }
+
+    static async updateRole(userId, role) {
+        const user = await UserRepository.findById(userId);
+
+        if (!user) {
+            throw new Error('User tidak ditemukan');
+        }
+
+        await UserRepository.updateRole(userId, role);
+    }
+
+
+    static async getMe(req, res) {
+        res.json({
+            success: true,
+            data: req.user
+        });
+    };
+
     static async getAllUsers() {
         return UserRepository.findAll();
     }

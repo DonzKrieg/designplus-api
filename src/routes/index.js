@@ -6,8 +6,8 @@ const router = express.Router();
 
 const shippingRoutes = require('./shippingRoutes');
 
-router.use(productRoutes);
-router.use(userRoutes);
 router.use('/shipping', shippingRoutes);
+router.use('/products', productRoutes);
+router.use('/', userRoutes);
 
 module.exports = router;
