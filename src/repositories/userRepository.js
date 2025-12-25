@@ -29,12 +29,21 @@ class UserRepository {
         return { id: result.insertId, name, email, role };
     }
 
-    static async update(id, { name, email }) {
+    static async update(id, { name, full_name, phone, location, postal_code }) {
         await pool.query(
-            'UPDATE users SET name = ?, email = ? WHERE id = ?',
-            [name, email, id]
+            'UPDATE users SET name = ?, full_name = ?, phone = ?, location = ?, postal_code = ? WHERE id = ?',
+            [name, full_name, phone, location, postal_code, id]
         );
-        return { id, name, email };
+        return { id, name, full_name, phone, location, postal_code };
+    }
+
+    static async updatePassword(id, password) {
+        const [result] = await pool.query(
+            'UPDATE users SET password = ? WHERE id = ?',
+            [password, id]
+        );
+
+        return result; 
     }
 
     static async updateRole(id, role) {

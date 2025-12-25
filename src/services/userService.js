@@ -59,6 +59,23 @@ class UserService {
         await UserRepository.updateRole(userId, role);
     }
 
+    static async updatePassword(userId, currentPassword, newPassword) {
+        const user = await UserRepository.findById(userId);
+        if(!user) {
+            throw new Error('User tidak ditemukan');
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if(!isMatch) {
+            throw new Error('Password lama tidak sesuai');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+        await UserRepository.updatePassword(userId, hashedPassword);
+
+        return true;
+    }
+
 
     static async getMe(req, res) {
         res.json({
@@ -85,7 +102,8 @@ class UserService {
     }
 
     static async updateUser(id, data) {
-        return UserRepository.update(id, data);
+        await this.getUserById(id);
+        return await UserRepository.update(id, data);
     }
 
     static async deleteUser(id) {

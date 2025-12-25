@@ -1,4 +1,5 @@
 const UserService = require("../services/userService");
+const bcrypt = require('bcrypt');
 
 class UserController {
     static async register(req, res) {
@@ -77,6 +78,35 @@ class UserController {
         }
     }
 
+    static async updatePassword(req, res) {
+        try {
+            const userId = req.params.id;
+            const { current_password, new_password } = req.body;
+            if (!userId) {
+                return res.status(404).json({ message: 'User tidak ditemukan' });
+            };
+
+            if(!current_password || !new_password) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Password lama dan baru wajib diisi'
+                });
+            }
+
+            await UserService.updatePassword(userId, current_password, new_password);
+
+            return res.status(200).json({
+                success: true,
+                message: 'Password berhasil diubah'
+            });
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        };
+    };
+
     static async updateRole(req, res) {
         try {
             const { id } = req.params;
@@ -107,7 +137,8 @@ class UserController {
 
     static async updateUser(req, res) {
         try {
-            const user = await UserService.updateUser(req.params.id, req.body);
+            const userId = req.params.id;
+            const user = await UserService.updateUser(userId, req.body);
             res.json({ success: true, data: user });
         } catch (error) {
             res.status(400).json({ success: false, message: error.message });
