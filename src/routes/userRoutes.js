@@ -9,9 +9,9 @@ router.get('/users/:id', UserController.getUser);
 router.post('/users', UserController.createUser);
 router.post('/login', UserController.login);
 router.post('/register', UserController.register);
+router.put('/users/password/me', authMiddleware, UserController.updatePassword);
 router.put('/users/:id/role', authMiddleware, roleMiddleware('admin'), UserController.updateRole);
 router.put('/users/:id',authMiddleware, UserController.updateUser);
-router.put('/users/password/:id', authMiddleware, UserController.updatePassword);
 router.delete('/users/:id', authMiddleware, UserController.deleteUser);
 router.get('/auth/me', authMiddleware, UserController.getMe);
 

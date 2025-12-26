@@ -37,13 +37,13 @@ class UserRepository {
         return { id, name, full_name, phone, location, postal_code };
     }
 
-    static async updatePassword(id, password) {
+    static async updatePassword(id, hashedPassword) {
         const [result] = await pool.query(
             'UPDATE users SET password = ? WHERE id = ?',
-            [password, id]
+            [hashedPassword, id]
         );
 
-        return result; 
+        return result.affectedRows; 
     }
 
     static async updateRole(id, role) {

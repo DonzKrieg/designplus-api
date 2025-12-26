@@ -76,14 +76,6 @@ class UserService {
         return true;
     }
 
-
-    static async getMe(req, res) {
-        res.json({
-            success: true,
-            data: req.user
-        });
-    };
-
     static async getAllUsers() {
         return UserRepository.findAll();
     }

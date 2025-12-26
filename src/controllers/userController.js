@@ -80,8 +80,9 @@ class UserController {
 
     static async updatePassword(req, res) {
         try {
-            const userId = req.params.id;
+            const userId = req.user.id;
             const { current_password, new_password } = req.body;
+
             if (!userId) {
                 return res.status(404).json({ message: 'User tidak ditemukan' });
             };
