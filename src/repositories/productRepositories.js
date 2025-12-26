@@ -11,19 +11,19 @@ const getProductById = async (id) => {
 };
 
 const createProduct = async (product) => {
-    const { nama, harga, kategori, bahan, warna, stok, file, rating } = product;
+    const { nama, harga, kategori, file, rating } = product;
     const [result] = await db.query(
-        'INSERT INTO products (nama, harga, kategori, bahan, warna, stok, file, rating) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [nama, harga, kategori, bahan, warna, stok, file, rating]
+        'INSERT INTO products (nama, harga, kategori, file, rating) VALUES (?, ?, ?, ?, ?)',
+        [nama, harga, kategori, file, rating]
     );
     return result.insertId;
 };
 
 const updateProduct = async (id, product) => {
-    const { nama, harga, kategori, bahan, warna, stok, file, rating } = product;
+    const { nama, harga, kategori, file, rating } = product;
     await db.query(
-        'UPDATE products SET nama = ?, harga = ?, kategori = ?, bahan = ?, warna = ?, stok = ?, file = ?, rating = ? WHERE id = ?',
-        [nama, harga, kategori, bahan, warna, stok, file, rating, id]
+        'UPDATE products SET nama = ?, harga = ?, kategori = ?, file = ?, rating = ? WHERE id = ?',
+        [nama, harga, kategori, file, rating, id]
     );
 };
 
