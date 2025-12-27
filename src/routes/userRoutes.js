@@ -9,6 +9,12 @@ router.get('/users/:id', UserController.getUser);
 router.post('/users', UserController.createUser);
 router.post('/login', UserController.login);
 router.post('/register', UserController.register);
+
+// --- TAMBAHAN KHUSUS MOBILE ---
+// Endpoint ini dipanggil setelah Flutter berhasil login ke Firebase
+router.post('/auth/mobile-sync', authMiddleware, UserController.mobileSync); 
+// ------------------------------
+
 router.put('/users/password/me', authMiddleware, UserController.updatePassword);
 router.put('/users/:id/role', authMiddleware, roleMiddleware('admin'), UserController.updateRole);
 router.put('/users/:id',authMiddleware, UserController.updateUser);

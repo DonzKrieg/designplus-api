@@ -21,13 +21,23 @@ class UserRepository {
         return rows[0];
     }
 
-    static async create({ name, email, password, role }) {
+    // --- BAGIAN INI DIUPDATE ---
+    // Menerima firebase_uid dan phone agar sinkronisasi Mobile berjalan
+    static async create({ name, email, password, role, phone, firebase_uid }) {
         const [result] = await pool.query(
-            'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-            [name, email, password, role]
+            'INSERT INTO users (name, email, password, role, phone, firebase_uid) VALUES (?, ?, ?, ?, ?, ?)',
+            [
+                name, 
+                email, 
+                password, 
+                role, 
+                phone || null,         // Jika kosong, set NULL
+                firebase_uid || null   // Jika kosong, set NULL
+            ]
         );
-        return { id: result.insertId, name, email, role };
+        return { id: result.insertId, name, email, role, phone, firebase_uid };
     }
+    // ---------------------------
 
     static async update(id, { name, full_name, phone, location, postal_code }) {
         await pool.query(
@@ -47,7 +57,8 @@ class UserRepository {
     }
 
     static async updateRole(id, role) {
-        const [result] = await db.query(
+        // PERBAIKAN BUG: Sebelumnya tertulis 'db.query', diganti jadi 'pool.query'
+        const [result] = await pool.query(
             'UPDATE users SET role = ? WHERE id = ?',
             [role, id]
         );
@@ -63,4 +74,3 @@ class UserRepository {
 }
 
 module.exports = UserRepository;
-
