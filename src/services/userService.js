@@ -3,6 +3,40 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 class UserService {
+    
+    // --- METHOD BARU: SYNC FIREBASE USER ---
+    static async syncFirebaseUser(data) {
+        // 1. Cek apakah user sudah ada berdasarkan Email
+        // (Kita cek email dulu supaya user Web yang login di Mobile datanya nyambung)
+        const existingUser = await UserRepository.findByEmail(data.email);
+
+        if (existingUser) {
+            // OPTIONAL: Jika user ada tapi belum punya firebase_uid, update datanya di sini.
+            // Untuk saat ini kita kembalikan saja user yang sudah ada.
+            return existingUser;
+        }
+
+        // 2. Jika user belum ada, kita buat baru (Register otomatis dari Mobile)
+        
+        // Generate password dummy/acak karena user ini login pakai Google/Firebase
+        // Kita tidak akan pernah pakai password ini untuk login manual
+        const dummyPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(dummyPassword, 12);
+
+        // Panggil Repository untuk simpan
+        // Pastikan UserRepository.create Anda sudah support kolom 'firebase_uid' & 'phone'
+        const newUser = await UserRepository.create({
+            name: data.name,
+            email: data.email,
+            password: hashedPassword, // Default role
+            phone: data.phone,
+            firebase_uid: data.firebase_uid // ID KTP dari Firebase
+        });
+
+        return newUser;
+    }
+    // ----------------------------------------
+
     static async register(name, email, password) {
         const existingUser = await UserRepository.findByEmail(email);
         if (existingUser) {
@@ -15,7 +49,6 @@ class UserService {
             name,
             email,
             password: hashedPassword,
-            role: 'user'
         });
 
         return user;

@@ -2,6 +2,40 @@ const UserService = require("../services/userService");
 const bcrypt = require('bcrypt');
 
 class UserController {
+
+    static async mobileSync(req, res) {
+        try {
+            // Data dari Middleware (Firebase Token)
+            const { uid, email } = req.user; 
+            
+            // Data tambahan dari Body (dikirim dari Flutter)
+            const { firstName, lastName, phone } = req.body;
+
+            // PENTING: Anda harus memastikan UserService memiliki method ini.
+            // Jika belum, Anda harus membuatnya di UserService.js (lihat panduan di bawah kode ini).
+            // Logic: Cek apakah firebase_uid ada? Jika tidak, create user baru.
+            const user = await UserService.syncFirebaseUser({
+                firebase_uid: uid,
+                email: email,
+                name: `${firstName} ${lastName}`, 
+                phone: phone,
+                role: 'user'
+            });
+
+            res.status(200).json({
+                success: true,
+                message: "Sinkronisasi berhasil",
+                data: user,
+            });
+        } catch (error) {
+            console.error("Mobile Sync Error:", error);
+            res.status(500).json({
+                success: false,
+                message: error.message || "Gagal sinkronisasi ke database"
+            });
+        }
+    }
+
     static async register(req, res) {
         try {
             const { name, email, password } = req.body;
