@@ -93,6 +93,13 @@ class UserService {
         await UserRepository.updateRole(userId, role);
     }
 
+    static async firebaseGetMe(firebaseUid) {
+        const user = UserRepository.findByFirebaseUid(firebaseUid);
+        if(!user){
+            throw new Error('User tidak ditemukan');
+        }
+    }
+
     static async updatePassword(userId, currentPassword, newPassword) {
         const user = await UserRepository.findById(userId);
         if(!user) {

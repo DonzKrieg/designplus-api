@@ -19,11 +19,11 @@ const createOrder = async (order) => {
     // 1. Bongkar data
     const { user_id, number, total_price, shipping_address, shipping_cost, payment_status, order_status, snap_token } = order;
 
-    // 2. Query SQL yang BENAR (Ada 8 tanda tanya)
+    // 2. Query SQL yang BENAR
     const [result] = await db.query(
         `INSERT INTO orders (
             user_id, number, total_price, shipping_address, shipping_cost, payment_status, order_status, snap_token
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, // Pastikan ada 8 tanda tanya disini!
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 
         [user_id, number, total_price, shipping_address, shipping_cost, payment_status, order_status, snap_token]
     );

@@ -10,16 +10,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-<<<<<<< HEAD
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "firebase-admin": "^13.6.0",
     "jsonwebtoken": "^9.0.3",
-=======
-    "dotenv": "^17.2.3",
-    "express": "^5.2.1",
->>>>>>> 8403f91596e3d43894b772b49c8c0b50a54e9b48
     "mysql2": "^3.15.3"
   }
 }

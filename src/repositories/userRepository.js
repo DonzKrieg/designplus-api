@@ -21,6 +21,13 @@ class UserRepository {
         return rows[0];
     }
 
+    static async findByFirebaseUid(firebaseUid) {
+        const [rows] = await pool.query(
+            'SELECT * FROM users WHERE firebase_uid = ?', [firebaseUid]
+        );
+        return rows[0];
+    }
+
     // --- BAGIAN INI DIUPDATE ---
     // Menerima firebase_uid dan phone agar sinkronisasi Mobile berjalan
     static async create({ name, email, password, role, phone, firebase_uid }) {

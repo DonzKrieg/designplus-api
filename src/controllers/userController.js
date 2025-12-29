@@ -1,3 +1,4 @@
+const UserRepository = require("../repositories/userRepository");
 const UserService = require("../services/userService");
 const bcrypt = require('bcrypt');
 
@@ -81,6 +82,21 @@ class UserController {
             },
         });
     }
+
+    static async firebaseGetMe(req, res) {
+        try {
+            const firebaseUid = req.user.firebase_uid;
+            res.json({
+                success: true,
+                firebaseUid: firebaseUid,
+            })
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        };
+    };
 
     static async getUsers(req, res) {
         try {
