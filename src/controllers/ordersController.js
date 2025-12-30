@@ -66,7 +66,7 @@ const createOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: "Email wajib ada." });
         }
 
-        console.log(`= = = MENCARI USER: ${userEmail} = = =`);
+        console.log(`= = MENCARI USER: ${userEmail} = =`);
 
         const userMysql = await userRepository.findByEmail(userEmail);
 
