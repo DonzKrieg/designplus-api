@@ -4,6 +4,9 @@ const productController = require ('../controllers/productControllers');
 
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
+const authJwt = require('../middlewares/authJwt.middleware');
+const authFirebase = require('../middlewares/authFirebase.middleware');
+const authEither = [authJwt, authFirebase];
 
 router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProductById);

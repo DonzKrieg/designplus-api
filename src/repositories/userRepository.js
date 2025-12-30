@@ -28,6 +28,14 @@ class UserRepository {
         return rows[0];
     }
 
+    // Nambah Bagian buat Update Firebase UID kalo user login pake email.
+    static async updateFirebaseUid(id, firebaseUid) {
+        await pool.query(
+          'UPDATE users SET firebase_uid = ? WHERE id = ?',
+          [firebaseUid, id]
+        );
+    }
+
     // --- BAGIAN INI DIUPDATE ---
     // Menerima firebase_uid dan phone agar sinkronisasi Mobile berjalan
     static async create({ name, email, password, role, phone, firebase_uid }) {
