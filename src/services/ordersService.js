@@ -21,17 +21,14 @@ const getOrdersByUserId = async (userId) => {
 };
 
 const createOrder = async (orderData) => {
-    // 1. Validasi field utama
     if (!orderData.total_price || !orderData.shipping_address || !orderData.shipping_cost) {
         throw new Error('Semua field harus terisi (Harga, Alamat, Ongkir)');
     }
 
-    // 2. Validasi Items (Wajib ada barang yg dibeli)
     if (!orderData.items || orderData.items.length === 0) {
         throw new Error('Data items kosong. Tidak bisa membuat order tanpa produk.');
     }
 
-    // Teruskan ke repository (yang sudah support Transaction & Bulk Insert)
     return await ordersRepository.createOrder(orderData);
 };
 
