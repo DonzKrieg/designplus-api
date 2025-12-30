@@ -56,7 +56,7 @@ const getOrdersByUserId = async (req, res) => {
 
 const createOrder = async (req, res) => {
     try {
-        console.log("= = = 1. DATA MASUK DARI FLUTTER = = =");
+        console.log("= = = DATA MASUK DARI FLUTTER = = =");
         // console.log(req.body); 
 
         const userEmail = req.body.email;
@@ -66,7 +66,7 @@ const createOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: "Email wajib ada." });
         }
 
-        console.log(`= = = 2. MENCARI USER: ${userEmail} = = =`);
+        console.log(`= = = MENCARI USER: ${userEmail} = = =`);
 
         const userMysql = await userRepository.findByEmail(userEmail);
 
