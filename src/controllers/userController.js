@@ -6,7 +6,7 @@ class UserController {
     static async mobileSync(req, res) {
         try {
             // Data dari Middleware (Firebase Token)
-            const { uid, email } = req.user; 
+            const { uid, email } = req.user;
             
             // Data tambahan dari Body (dikirim dari Flutter)
             const { firstName, lastName, phone } = req.body;

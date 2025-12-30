@@ -28,7 +28,8 @@ class UserService {
         const newUser = await UserRepository.create({
             name: data.name,
             email: data.email,
-            password: hashedPassword, // Default role
+            password: hashedPassword, 
+            role: 'user', // Default role
             phone: data.phone,
             firebase_uid: data.firebase_uid // ID KTP dari Firebase
         });
@@ -49,6 +50,7 @@ class UserService {
             name,
             email,
             password: hashedPassword,
+            role: 'user'
         });
 
         return user;
