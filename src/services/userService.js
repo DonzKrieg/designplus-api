@@ -1,26 +1,32 @@
 const UserRepository = require('../repositories/userRepository');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const admin = require("../config/serviceAccountKey.json");
 
 class UserService {
     
     // --- METHOD BARU: SYNC FIREBASE USER ---
     static async syncFirebaseUser(data) {
+        // 1. Cek user berdasarkan firebase_uid
+        const userByFirebaseUid = await UserRepository.findByFirebaseUid(data.firebase_uid);
+        if(userByFirebaseUid){
+            return userByFirebaseUid;
+        }
         // 1. Cek apakah user sudah ada berdasarkan Email
         // (Kita cek email dulu supaya user Web yang login di Mobile datanya nyambung)
-        const existingUser = await UserRepository.findByEmail(data.email);
+        const userByEmail = await UserRepository.findByEmail(data.email);
 
-        if (existingUser) {
+        if (userByEmail) {
             // OPTIONAL: Jika user ada tapi belum punya firebase_uid, update datanya di sini.
             // Untuk saat ini kita kembalikan saja user yang sudah ada.
-            return existingUser;
+            await UserRepository.updateFirebaseUid(userByEmail.id, data.firebase_uid);
+            return {id: userByEmail, firebase_uid: data.firebase_uid};
         }
 
         // 2. Jika user belum ada, kita buat baru (Register otomatis dari Mobile)
         
         // Generate password dummy/acak karena user ini login pakai Google/Firebase
         // Kita tidak akan pernah pakai password ini untuk login manual
-        const dummyPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
         const hashedPassword = await bcrypt.hash(dummyPassword, 12);
 
         // Panggil Repository untuk simpan
@@ -54,6 +60,37 @@ class UserService {
         });
 
         return user;
+    }
+
+    static async loginFromFirebase(firebaseUid) {
+        // 1. Cari user berdasarkan firebaseUid
+        const user = await UserRepository.findByFirebaseUid(firebaseUid);
+        if(!user){
+            throw new Error('User belum terdaftar');
+        }
+
+        // 2. Generate JWT Internal buat akses API
+        const payload = {
+            id: user.id,
+            role: user.role,
+            authType: 'mobile'
+        }
+
+        const token = jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            {expiresIn: process.env.JWT_EXPIRES_IN}
+        );
+
+        // 3. Kembalikan user tanpa token jwt
+        return{
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            firebase_uid: user.firebase_uid,
+            token
+        };
     }
 
     static async login(email, password) {
@@ -94,6 +131,13 @@ class UserService {
         await UserRepository.updateRole(userId, role);
     }
 
+    static async firebaseGetMe(firebaseUid) {
+        const user = UserRepository.findByFirebaseUid(firebaseUid);
+        if(!user){
+            throw new Error('User tidak ditemukan');
+        }
+    }
+
     static async updatePassword(userId, currentPassword, newPassword) {
         const user = await UserRepository.findById(userId);
         if(!user) {
@@ -118,6 +162,12 @@ class UserService {
     static async getUserById(id) {
         const user = await UserRepository.findById(id);
         if (!user) throw new Error('User not found');
+        return user;
+    }
+
+    static async getUserByFirebaseUid(firebaseUid) {
+        const user = await UserRepository.findByFirebaseUid(firebaseUid);
+        if(!user) throw new Error('User not found');
         return user;
     }
 

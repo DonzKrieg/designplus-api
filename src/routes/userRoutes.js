@@ -2,6 +2,7 @@ const express = require('express');
 const authMiddleware = require('../middlewares/authMiddleware');
 const UserController = require('../controllers/userController');
 const roleMiddleware = require('../middlewares/roleMiddleware');
+const authFirebase = require('../middlewares/authFirebase.middleware');
 const router = express.Router();
 
 router.get('/users', UserController.getUsers);
@@ -12,7 +13,10 @@ router.post('/register', UserController.register);
 
 // --- TAMBAHAN KHUSUS MOBILE ---
 // Endpoint ini dipanggil setelah Flutter berhasil login ke Firebase
-router.post('/auth/mobile-sync', authMiddleware, UserController.mobileSync); 
+router.post('/auth/mobile-sync', authMiddleware, UserController.mobileSync);
+router.post('/login/mobile', UserController.loginFirebase)
+// Endpoint buat manggil firebase uid
+router.get('/users/firebase/me', authMiddleware, UserController.firebaseGetMe); 
 // ------------------------------
 
 router.put('/users/password/me', authMiddleware, UserController.updatePassword);

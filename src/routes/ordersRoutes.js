@@ -6,7 +6,7 @@ const roleMiddleware = require('../middlewares/roleMiddleware');
 
 // User
 router.get('/my', authMiddleware, ordersController.getOrdersByUserId);
-router.post('/', authMiddleware, ordersController.createOrder);
+router.post('/', ordersController.createOrder);
 
 // Admin
 router.get('/',authMiddleware, roleMiddleware('admin'), ordersController.getAllOrders);
