@@ -1,7 +1,48 @@
+const UserRepository = require("../repositories/userRepository");
 const UserService = require("../services/userService");
 const bcrypt = require('bcrypt');
 
 class UserController {
+
+    static async mobileSync(req, res) {
+        try {
+            // Data dari Middleware (Firebase Token)
+            const { uid, email } = req.user;
+            
+            // Data tambahan dari Body (dikirim dari Flutter)
+            const { firstName, lastName, phone } = req.body;
+
+            // PENTING: Anda harus memastikan UserService memiliki method ini.
+            // Jika belum, Anda harus membuatnya di UserService.js (lihat panduan di bawah kode ini).
+            // Logic: Cek apakah firebase_uid ada? Jika tidak, create user baru.
+            const user = await UserService.syncFirebaseUser({
+                firebase_uid: uid,
+                email: email,
+                name: `${firstName} ${lastName}`, 
+                phone: phone,
+                role: 'user'
+            });
+
+            res.status(200).json({
+                success: true,
+                message: "Sinkronisasi berhasil",
+                data: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    firebase_uid: user.firebase_uid
+                },
+            });
+        } catch (error) {
+            console.error("Mobile Sync Error:", error);
+            res.status(500).json({
+                success: false,
+                message: error.message || "Gagal sinkronisasi ke database"
+            });
+        }
+    }
+
     static async register(req, res) {
         try {
             const { name, email, password } = req.body;
@@ -37,6 +78,24 @@ class UserController {
         }
     }
 
+    static async loginFirebase(req, res, next) {
+        try {
+            // Data dari firebase middleware
+            const { firebase_uid } = req.user;
+            const user = await UserService.loginFromFirebase(firebase_uid);
+
+            res.status(200).json({
+                success: true,
+                message: 'Login mobile berhasil',
+                data: user
+            });
+        } catch (error) {
+            res.status(401).json({
+                success: false,
+                message: error.message,
+            });
+        };
+    };
     static async getMe(req, res) {
         res.json({
             success: true,
@@ -47,6 +106,21 @@ class UserController {
             },
         });
     }
+
+    static async firebaseGetMe(req, res) {
+        try {
+            const firebaseUid = req.user.firebase_uid;
+            res.json({
+                success: true,
+                firebaseUid: firebaseUid,
+            })
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        };
+    };
 
     static async getUsers(req, res) {
         try {

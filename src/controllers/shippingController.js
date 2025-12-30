@@ -14,7 +14,6 @@ const calculateCost = (req, res) => {
         const normalizedCity = city.toLowerCase().trim();
 
         // LOGIKA MOCKUP ONGKIR (Simulasi)
-        // Anda bisa menambahkan kota lain di sini
         const rates = {
             "jakarta": 10000,
             "bogor": 15000,
