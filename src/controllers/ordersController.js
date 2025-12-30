@@ -59,10 +59,8 @@ const createOrder = async (req, res) => {
         console.log("=== DATA DARI FLUTTER ===");
         console.log(req.body);
 
-        // 1. Ambil Email yang dikirim dari Flutter
         const userEmail = req.body.email;
 
-        // Validasi: Email wajib ada
         if (!userEmail) {
             return res.status(400).json({
                 success: false,
@@ -70,10 +68,8 @@ const createOrder = async (req, res) => {
             });
         }
 
-        // 2. [LOGIC PENCARIAN] Cari ID User MySQL berdasarkan Email
         const userMysql = await userRepository.findByEmail(userEmail);
 
-        // Jika user tidak ditemukan di database
         if (!userMysql) {
             return res.status(404).json({
                 success: false,
@@ -85,8 +81,6 @@ const createOrder = async (req, res) => {
 
         console.log(`User ditemukan! Email: ${userEmail} -> ID MySQL: ${realUserId}`);
 
-        // 4. Langsung Simpan ke Database (Table Orders)
-        // Kita pakai realUserId yang baru saja kita temukan.
         const order = await ordersService.createOrder({
             user_id: realUserId, 
             number: req.body.number ?? `INV-${Date.now()}-${realUserId}`,
@@ -98,7 +92,6 @@ const createOrder = async (req, res) => {
             snap_token: req.body.snap_token ?? ""
         });
 
-        // 5. Kirim respon SUKSES ke Flutter
         res.status(201).json({
             success: true,
             message: "Order berhasil disimpan dengan ID User yang benar.",
