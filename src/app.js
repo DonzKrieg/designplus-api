@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 
 
-app.use('/', express.static(path.join(__dirname, '../../webpro_designplus_laravel/designplus-web/public')));
+app.use('/', express.static(path.join(__dirname, '../../designplus-web/public')));
 app.use('/v1/api', routes);
 
 module.exports = app;
