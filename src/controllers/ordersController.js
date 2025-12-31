@@ -41,13 +41,43 @@ const getOrderById = async (req, res) => {
 
 const getOrdersByUserId = async (req, res) => {
     try {
-        const orders = await ordersService.getOrdersByUserId(req.user.id);
+        console.log("= = = GET ORDERS REQUEST = = =");
+        
+        // 1. Ambil Email dari Token Firebase (Pastikan middleware auth jalan)
+        const userEmail = req.user.email; 
+        console.log("Email dari Token:", userEmail);
+
+        if (!userEmail) {
+            return res.status(400).json({ success: false, message: "Email tidak ditemukan di token." });
+        }
+
+        // 2. Cari User ID asli di MySQL berdasarkan Email
+        const userMysql = await userRepository.findByEmail(userEmail);
+
+        if (!userMysql) {
+            console.log("User MySQL tidak ditemukan!");
+            return res.status(404).json({
+                success: false,
+                message: `User dengan email ${userEmail} belum terdaftar di database MySQL.`
+            });
+        }
+
+        const realUserId = userMysql.id;
+        console.log("User ID MySQL ditemukan:", realUserId);
+
+        // 3. Ambil order menggunakan ID MySQL yang benar
+        const orders = await ordersService.getOrdersByUserId(realUserId);
+        
+        console.log(`Ditemukan ${orders.length} order.`);
+
         res.status(200).json({
             success: true,
             data: orders
         });
+
     } catch (error) {
-        res.status(400).json({
+        console.error("Error getOrdersByUserId:", error);
+        res.status(500).json({ // Gunakan 500 untuk error server
             success: false,
             message: error.message
         });

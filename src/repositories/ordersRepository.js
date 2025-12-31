@@ -6,7 +6,21 @@ const getAllOrders = async () => {
 };
 
 const getOrdersByUserId = async (userId) => {
-    const [rows] = await db.query('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+    // Query ini men-join orders dengan order_items untuk mengambil 1 produk pertama sebagai display
+    const query = `
+        SELECT 
+            o.*, 
+            oi.product_name, 
+            oi.custom_file, 
+            oi.quantity as item_quantity
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        WHERE o.user_id = ? 
+        GROUP BY o.id 
+        ORDER BY o.created_at DESC
+    `;
+    
+    const [rows] = await db.query(query, [userId]);
     return rows;
 }
 
