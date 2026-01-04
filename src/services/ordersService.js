@@ -6,7 +6,7 @@ const getAllOrders = async () => {
 
 const getOrderById = async (id) => {
     const order = await ordersRepository.getOrderById(id);
-    if(!order){
+    if (!order) {
         throw new Error(`Order dengan id: ${id} tidak ditemukan`);
     };
     return order;
@@ -14,17 +14,22 @@ const getOrderById = async (id) => {
 
 const getOrdersByUserId = async (userId) => {
     const order = await ordersRepository.getOrdersByUserId(userId);
-    if(!order){
+    if (!order) {
         throw new Error(`Order dengan user id: ${userId} tidak ditemukan`);
     };
     return order;
 };
 
-const createOrder = async (order) => {
-    if(!order.total_price || !order.shipping_address || !order.shipping_cost){
-        throw new Error('Semua field harus terisi');
+const createOrder = async (orderData) => {
+    if (!orderData.total_price || !orderData.shipping_address || !orderData.shipping_cost) {
+        throw new Error('Semua field harus terisi (Harga, Alamat, Ongkir)');
     }
-    return await ordersRepository.createOrder(order);
+
+    if (!orderData.items || orderData.items.length === 0) {
+        throw new Error('Data items kosong. Tidak bisa membuat order tanpa produk.');
+    }
+
+    return await ordersRepository.createOrder(orderData);
 };
 
 const updateOrder = async (id, order) => {

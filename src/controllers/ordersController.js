@@ -41,13 +41,43 @@ const getOrderById = async (req, res) => {
 
 const getOrdersByUserId = async (req, res) => {
     try {
-        const orders = await ordersService.getOrdersByUserId(req.user.id);
+        console.log("= = = GET ORDERS REQUEST = = =");
+        
+        // 1. Ambil Email dari Token Firebase (Pastikan middleware auth jalan)
+        const userEmail = req.user.email; 
+        console.log("Email dari Token:", userEmail);
+
+        if (!userEmail) {
+            return res.status(400).json({ success: false, message: "Email tidak ditemukan di token." });
+        }
+
+        // 2. Cari User ID asli di MySQL berdasarkan Email
+        const userMysql = await userRepository.findByEmail(userEmail);
+
+        if (!userMysql) {
+            console.log("User MySQL tidak ditemukan!");
+            return res.status(404).json({
+                success: false,
+                message: `User dengan email ${userEmail} belum terdaftar di database MySQL.`
+            });
+        }
+
+        const realUserId = userMysql.id;
+        console.log("User ID MySQL ditemukan:", realUserId);
+
+        // 3. Ambil order menggunakan ID MySQL yang benar
+        const orders = await ordersService.getOrdersByUserId(realUserId);
+        
+        console.log(`Ditemukan ${orders.length} order.`);
+
         res.status(200).json({
             success: true,
             data: orders
         });
+
     } catch (error) {
-        res.status(400).json({
+        console.error("Error getOrdersByUserId:", error);
+        res.status(500).json({ // Gunakan 500 untuk error server
             success: false,
             message: error.message
         });
@@ -56,57 +86,55 @@ const getOrdersByUserId = async (req, res) => {
 
 const createOrder = async (req, res) => {
     try {
-        console.log("=== DATA DARI FLUTTER ===");
-        console.log(req.body);
+        console.log("= = = DATA MASUK DARI FLUTTER = = =");
+        // console.log(req.body); 
 
-        // 1. Ambil Email yang dikirim dari Flutter
         const userEmail = req.body.email;
 
-        // Validasi: Email wajib ada
         if (!userEmail) {
-            return res.status(400).json({
-                success: false,
-                message: "Email user wajib dikirim untuk sinkronisasi ID."
-            });
+            console.log("Email tidak dikirim dari Flutter");
+            return res.status(400).json({ success: false, message: "Email wajib ada." });
         }
 
-        // 2. [LOGIC PENCARIAN] Cari ID User MySQL berdasarkan Email
+        console.log(`= = MENCARI USER: ${userEmail} = =`);
+
         const userMysql = await userRepository.findByEmail(userEmail);
 
-        // Jika user tidak ditemukan di database
         if (!userMysql) {
+            console.log("USER TIDAK DITEMUKAN DI MYSQL!");
             return res.status(404).json({
                 success: false,
-                message: `User dengan email ${userEmail} tidak ditemukan di Database MySQL.`
+                message: `User dengan email ${userEmail} tidak terdaftar di database.`
             });
         }
+
+        console.log("USER DITEMUKAN! ID:", userMysql.id);
 
         const realUserId = userMysql.id;
 
-        console.log(`User ditemukan! Email: ${userEmail} -> ID MySQL: ${realUserId}`);
-
-        // 4. Langsung Simpan ke Database (Table Orders)
-        // Kita pakai realUserId yang baru saja kita temukan.
         const order = await ordersService.createOrder({
-            user_id: realUserId, 
+            user_id: realUserId,
             number: req.body.number ?? `INV-${Date.now()}-${realUserId}`,
             total_price: req.body.total_price,
             shipping_address: req.body.shipping_address ?? null,
             shipping_cost: req.body.shipping_cost ?? 0,
             payment_status: req.body.payment_status,
             order_status: req.body.order_status,
-            snap_token: req.body.snap_token ?? ""
+            snap_token: req.body.snap_token ?? "",
+
+            items: req.body.items || []
         });
 
-        // 5. Kirim respon SUKSES ke Flutter
+        console.log("ORDER BERHASIL DISIMPAN KE DB!");
+
         res.status(201).json({
             success: true,
-            message: "Order berhasil disimpan dengan ID User yang benar.",
+            message: "Order berhasil disimpan.",
             data: { orders: order }
         });
 
     } catch (error) {
-        console.error("ERROR CREATE ORDER:", error);
+        console.error("ERROR FATAL:", error);
         res.status(500).json({
             success: false,
             message: error.message
