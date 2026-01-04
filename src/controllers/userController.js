@@ -78,24 +78,6 @@ class UserController {
         }
     }
 
-    static async loginFirebase(req, res, next) {
-        try {
-            // Data dari firebase middleware
-            const { firebase_uid } = req.user;
-            const user = await UserService.loginFromFirebase(firebase_uid);
-
-            res.status(200).json({
-                success: true,
-                message: 'Login mobile berhasil',
-                data: user
-            });
-        } catch (error) {
-            res.status(401).json({
-                success: false,
-                message: error.message,
-            });
-        };
-    };
     static async getMe(req, res) {
         res.json({
             success: true,

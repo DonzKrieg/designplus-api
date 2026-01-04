@@ -27,6 +27,7 @@ class UserService {
         
         // Generate password dummy/acak karena user ini login pakai Google/Firebase
         // Kita tidak akan pernah pakai password ini untuk login manual
+        const dummyPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
         const hashedPassword = await bcrypt.hash(dummyPassword, 12);
 
         // Panggil Repository untuk simpan
@@ -49,13 +50,14 @@ class UserService {
         if (existingUser) {
             throw new Error('Email sudah terdaftar');
         }
-
+        
         const hashedPassword = await bcrypt.hash(password, 12);
 
         const user = await UserRepository.create({
             name,
             email,
             password: hashedPassword,
+            role: 'user'
         });
 
         return user;
