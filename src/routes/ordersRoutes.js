@@ -19,7 +19,6 @@
 const express = require('express');
 const router = express.Router();
 const ordersController = require('../controllers/ordersController');
-const messageController = require('../controllers/messageController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 
@@ -31,8 +30,6 @@ router.get('/user', authMiddleware, ordersController.getOrdersByUserId);
 
 // Route untuk Create Order
 router.post('/', ordersController.createOrder);
-router.get('/:id/messages', authMiddleware, messageController.getMessages);
-router.post('/:id/messages', authMiddleware, messageController.sendMessage);
 
 // ==================================================================
 // 2. ROUTE DINAMIS (Menggunakan :id)

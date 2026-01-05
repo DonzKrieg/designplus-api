@@ -1,4 +1,6 @@
 const messageRepository = require('../repositories/messageRepository');
+const userRepository = require('../repositories/userRepository');
+const axios = require('axios');
 
 const getChatHistory = async (userId) => {
     // 2. Ambil data pesan dari repository
@@ -13,6 +15,8 @@ const getChatHistory = async (userId) => {
         created_at: msg.created_at
     }));
 };
+
+
 
 const sendUserMessage = async (userId, messageContent) => {
     if (!messageContent) {
@@ -31,12 +35,18 @@ const sendUserMessage = async (userId, messageContent) => {
     // 3. Simpan ke DB via Repository
     const result = await messageRepository.createMessage(messageData);
     
-    return {
-        id: result.insertId,
-        ...messageData,
-        is_admin: false,
-        sender_name: 'You'
-    };
+    const user = await userRepository.findById(userId);
+    const senderName = user?.name || 'User';
+
+    axios.post('http://localhost:8000/api/internal/notify-chat', {
+        user_id: userId,
+        sender_name: senderName,
+        message: messageContent
+    }).catch(err => {
+        console.error('Gagal kirim data ke laravel', err.message);
+    });
+
+    return result;
 };
 
 module.exports = {
