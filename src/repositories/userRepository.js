@@ -1,6 +1,34 @@
 const pool = require('../config/database');
 
 class UserRepository {
+    static async getUserWhislist(userId) {
+        const [rows] = await pool.query(`
+            SELECT
+                w.id AS wishlist_id,
+                p.id AS product_id,
+                p.nama,
+                p.harga,
+                p.file
+            FROM wishlists w
+            JOIN products p ON p.id = w.product_id
+            WHERE w.user_id = ?
+        `, [userId]);
+
+        return rows;
+    }
+
+    static async createWishlistEntry(userId, productId) {
+        const [result] = await pool.query(`
+            INSERT INTO wishlists (user_id, product_id)
+            VALUES (?, ?)
+        `, [userId, productId]);
+        return result.insertId;
+    }
+
+    static async deleteWishlist(id) {
+        await pool.query('DELETE FROM wishlists WHERE id = ?', [id]);
+    }
+
     static async findByEmail(email) {
         const [rows] = await pool.query(
             'SELECT * FROM users WHERE email = ?',

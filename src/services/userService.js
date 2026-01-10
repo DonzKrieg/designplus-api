@@ -160,6 +160,23 @@ class UserService {
         return UserRepository.findAll();
     }
 
+    static async getUserWishlists(userId) {
+        return UserRepository.getUserWhislist(userId);
+    }
+
+    static async addUserWishlist(userId, productId) {
+        return UserRepository.createWishlistEntry(userId, productId);
+    }
+
+    static async deleteUserWishlist(wishlistId) {
+        // const wishlist = await UserRepository.getUserWhislist(userId);
+        // if(!wishlist || wishlist.user_id !== userId) {
+        //     throw new Error('Wishlist tidak ditemukan');
+        // }
+
+        await UserRepository.deleteWishlist(wishlistId);
+    }
+
     static async getUserById(id) {
         const user = await UserRepository.findById(id);
         if (!user) throw new Error('User not found');

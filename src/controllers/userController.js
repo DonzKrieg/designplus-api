@@ -125,6 +125,50 @@ class UserController {
         }
     }
 
+    static async getUserWishlists(req, res) {
+        try {
+            const firebaseUid = req.user.uid;
+            const user = await UserService.getUserByFirebaseUid(firebaseUid);
+            if (!user) {
+              return res.status(404).json({
+                success: true,
+                data: []
+              });
+            }
+            const data = await UserService.getUserWishlists(user.id);
+
+            res.status(200).json({ success: true, data });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    static async addUserWishlist(req, res) {
+        try {
+            const userId = req.user.uid;
+            const user = await UserService.getUserByFirebaseUid(userId);
+            const { product_id } = req.body;
+            const wishlistId = await UserService.addUserWishlist(user.id, product_id);
+            
+            res.status(201).json({ success:true, data: { wishlistId } });
+            console.log(`User ${user.id} Berhasil menambahkan ke wishlist dengan ID: ${wishlistId}`);
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    static async deleteUserWishlist(req, res) {
+        try {
+            const userId = req.user.uid;
+            const user = await UserService.getUserByFirebaseUid(userId);
+            const wishlistId = req.params.id;
+            await UserService.deleteUserWishlist(wishlistId);
+            res.json({ success:true, message: 'Wishlist entry deleted' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
     static async createUser(req, res) {
         try {
             const user = await UserService.createUser(req.body);
