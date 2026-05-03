@@ -3,52 +3,11 @@ const UserService = require("../services/userService");
 const bcrypt = require('bcrypt');
 
 class UserController {
-
-    static async mobileSync(req, res) {
-        try {
-            // Data dari Middleware (Firebase Token)
-            const { uid, email } = req.user;
-            
-            // Data tambahan dari Body (dikirim dari Flutter)
-            const { firstName, lastName, phone } = req.body;
-
-            // PENTING: Anda harus memastikan UserService memiliki method ini.
-            // Jika belum, Anda harus membuatnya di UserService.js (lihat panduan di bawah kode ini).
-            // Logic: Cek apakah firebase_uid ada? Jika tidak, create user baru.
-            const user = await UserService.syncFirebaseUser({
-                firebase_uid: uid,
-                email: email,
-                name: `${firstName} ${lastName}`, 
-                phone: phone,
-                role: 'user'
-            });
-
-            res.status(200).json({
-                success: true,
-                message: "Sinkronisasi berhasil",
-                data: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    firebase_uid: user.firebase_uid
-                },
-            });
-        } catch (error) {
-            console.error("Mobile Sync Error:", error);
-            res.status(500).json({
-                success: false,
-                message: error.message || "Gagal sinkronisasi ke database"
-            });
-        }
-    }
-
     static async register(req, res) {
         try {
             const { name, email, password } = req.body;
 
-            const user = await UserService.register(name, email, password);
-
+            const user = await UserService.register({name, email, password});
             res.status(201).json({
                 success: true,
                 message: "User berhasil didaftarkan",
@@ -65,7 +24,7 @@ class UserController {
     static async login(req, res, next) {
         try {
             const { email, password } = req.body;
-            const token = await UserService.login(email, password);
+            const token = await UserService.login({email, password});
             res.status(200).json({
                 success: true,
                 token,
@@ -77,32 +36,6 @@ class UserController {
             });
         }
     }
-
-    static async getMe(req, res) {
-        res.json({
-            success: true,
-            data: {
-                id: req.user.id,
-                email: req.user.email,
-                role: req.user.role,
-            },
-        });
-    }
-
-    static async firebaseGetMe(req, res) {
-        try {
-            const firebaseUid = req.user.firebase_uid;
-            res.json({
-                success: true,
-                firebaseUid: firebaseUid,
-            })
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
-        };
-    };
 
     static async getUsers(req, res) {
         try {
@@ -127,8 +60,8 @@ class UserController {
 
     static async getUserWishlists(req, res) {
         try {
-            const firebaseUid = req.user.uid;
-            const user = await UserService.getUserByFirebaseUid(firebaseUid);
+            const userId = req.user.id;
+            const user = await UserService.getUserById(userId);
             if (!user) {
               return res.status(404).json({
                 success: true,
@@ -145,8 +78,8 @@ class UserController {
 
     static async addUserWishlist(req, res) {
         try {
-            const userId = req.user.uid;
-            const user = await UserService.getUserByFirebaseUid(userId);
+            const userId = req.user.id;
+            const user = await UserService.getUserById(userId);
             const { product_id } = req.body;
             const wishlistId = await UserService.addUserWishlist(user.id, product_id);
             
@@ -159,8 +92,8 @@ class UserController {
 
     static async deleteUserWishlist(req, res) {
         try {
-            const userId = req.user.uid;
-            const user = await UserService.getUserByFirebaseUid(userId);
+            const userId = req.user.id;
+            const user = await UserService.getUserById(userId);
             const wishlistId = req.params.id;
             await UserService.deleteUserWishlist(wishlistId);
             res.json({ success:true, message: 'Wishlist entry deleted' });
@@ -222,7 +155,7 @@ class UserController {
                 });
             }
 
-            await UserService.updateRole(id, role);
+            await UserService.updateUserRole(id, role);
 
             res.json({
                 success: true,
