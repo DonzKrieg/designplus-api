@@ -1,40 +1,37 @@
-const db = require('../config/database');
+const Product = require('../models/Product');
 
-const getAllProducts = async () => {
-    const [rows] = await db.query('SELECT * FROM products');
-    return rows;
-};
+class ProductRepository {
+    static async create(productData) {
+        const newProduct = new Product(productData);
+        return await newProduct.save();
+    }
 
-const getProductById = async (id) => {
-    const [rows] = await db.query('SELECT * FROM products WHERE id = ?', [id]);
-    return rows[0];
-};
+    static async getAllProducts() {
+        const products = await Product.find();
+        return products;
+    }
 
-const createProduct = async (product) => {
-    const { nama, harga, kategori, file, rating } = product;
-    const [result] = await db.query(
-        'INSERT INTO products (nama, harga, kategori, file, rating) VALUES (?, ?, ?, ?, ?)',
-        [nama, harga, kategori, file, rating]
-    );
-    return result.insertId;
-};
+    static async getProductById(id) {
+        const product = await Product.findById(id);
+        return product;
+    }
 
-const updateProduct = async (id, product) => {
-    const { nama, harga, kategori, file, rating } = product;
-    await db.query(
-        'UPDATE products SET nama = ?, harga = ?, kategori = ?, file = ?, rating = ? WHERE id = ?',
-        [nama, harga, kategori, file, rating, id]
-    );
-};
+    static async update(id, productData) {
+        const updatedProduct = await Product.findByIdAndUpdate(
+            id,
+            productData,
+            { new: true }
+        );
+        return updatedProduct;
+    }
 
-const deleteProduct = async (id) => {
-    await db.query('DELETE FROM products WHERE id = ?', [id]);
-};
+    static async deleteProduct(id) {
+        const deleteProduct = await Product.findByIdAndDelete(id);
+        if (!deleteProduct) {
+            throw new Error('Product tidak ditemukan');
+        }
+        return deleteProduct;
+    }
+}
 
-module.exports = {
-    getAllProducts,
-    getProductById,
-    createProduct,
-    updateProduct,
-    deleteProduct
-};
+module.exports = ProductRepository;

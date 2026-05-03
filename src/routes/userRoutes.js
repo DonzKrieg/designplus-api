@@ -9,20 +9,11 @@ router.get('/users/:id', UserController.getUser);
 router.post('/users', UserController.createUser);
 router.post('/login', UserController.login);
 router.post('/register', UserController.register);
-
-// --- TAMBAHAN KHUSUS MOBILE ---
-// Endpoint ini dipanggil setelah Flutter berhasil login ke Firebase
-router.post('/auth/mobile-sync', authMiddleware, UserController.mobileSync);
-router.get('/users/firebase/me', authMiddleware, UserController.firebaseGetMe);
-router.post('/users/wishlists', authMiddleware, UserController.addUserWishlist);
-router.delete('/wishlists/me/:id', authMiddleware, UserController.deleteUserWishlist);
-// ------------------------------
 router.get('/wishlists/me', authMiddleware, UserController.getUserWishlists);
 
 router.put('/users/password/me', authMiddleware, UserController.updatePassword);
-router.put('/users/:id/role', authMiddleware, roleMiddleware('admin'), UserController.updateRole);
+router.put('/users/:id', authMiddleware, roleMiddleware('admin'),  UserController.updateRole);
 router.put('/users/:id',authMiddleware, UserController.updateUser);
 router.delete('/users/:id', authMiddleware, UserController.deleteUser);
-router.get('/auth/me', authMiddleware, UserController.getMe);
 
 module.exports = router;

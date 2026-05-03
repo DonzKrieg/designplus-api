@@ -8,7 +8,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
-
 app.use('/', express.static(path.join(__dirname, '../../designplus-web-fullstack/public')));
 app.use('/v2/api', routes);
 

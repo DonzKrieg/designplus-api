@@ -1,189 +1,94 @@
 const ordersService = require('../services/ordersService');
 const userRepository = require('../repositories/userRepository');
 
-
-const getAllOrders = async (req, res) => {
-    try {
-        const order = await ordersService.getAllOrders();
-        res.status(200).json({
-            success: true,
-            data: order
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    };
-};
-
-const getOrderById = async (req, res) => {
-    try {
-        const order = await ordersService.getOrderById(req.params.id);
-        if (req.user.role !== 'admin' && order.user_id !== req.user.id) {
-            return res.status(403).json({
-                success: false,
-                message: 'Akses ditolak'
+class OrdersController {
+    static async getAllOrders(req, res) {
+        try {
+            const order = await ordersService.getAllOrders();
+            res.status(200).json({
+                success: true,
+                data: order
             });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
         }
+    }
 
-        res.status(200).json({
-            success: true,
-            data: order
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
-    };
-};
-
-const getOrdersByUserId = async (req, res) => {
-    try {
-        console.log("= = = GET ORDERS REQUEST = = =");
-        
-        // 1. Ambil Email dari Token Firebase (Pastikan middleware auth jalan)
-        const userEmail = req.user.email; 
-        console.log("Email dari Token:", userEmail);
-
-        if (!userEmail) {
-            return res.status(400).json({ success: false, message: "Email tidak ditemukan di token." });
-        }
-
-        // 2. Cari User ID asli di MySQL berdasarkan Email
-        const userMysql = await userRepository.findByEmail(userEmail);
-
-        if (!userMysql) {
-            console.log("User MySQL tidak ditemukan!");
-            return res.status(404).json({
-                success: false,
-                message: `User dengan email ${userEmail} belum terdaftar di database MySQL.`
+    static async getOrderById(req, res) {
+        try {
+            const order = await ordersService.getOrderById(req.params.id);
+            res.status(200).json({
+                success: true,
+                data: order
             });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
         }
+    }
 
-        const realUserId = userMysql.id;
-        console.log("User ID MySQL ditemukan:", realUserId);
-
-        // 3. Ambil order menggunakan ID MySQL yang benar
-        const orders = await ordersService.getOrdersByUserId(realUserId);
-        
-        console.log(`Ditemukan ${orders.length} order.`);
-
-        res.status(200).json({
-            success: true,
-            data: orders
-        });
-
-    } catch (error) {
-        console.error("Error getOrdersByUserId:", error);
-        res.status(500).json({ // Gunakan 500 untuk error server
-            success: false,
-            message: error.message
-        });
-    };
-};
-
-const createOrder = async (req, res) => {
-    try {
-        console.log("= = = DATA MASUK DARI FLUTTER = = =");
-        // console.log(req.body); 
-
-        const userEmail = req.body.email;
-
-        if (!userEmail) {
-            console.log("Email tidak dikirim dari Flutter");
-            return res.status(400).json({ success: false, message: "Email wajib ada." });
-        }
-
-        console.log(`= = MENCARI USER: ${userEmail} = =`);
-
-        const userMysql = await userRepository.findByEmail(userEmail);
-
-        if (!userMysql) {
-            console.log("USER TIDAK DITEMUKAN DI MYSQL!");
-            return res.status(404).json({
-                success: false,
-                message: `User dengan email ${userEmail} tidak terdaftar di database.`
+    static async getOrdersByUserId(req, res) {
+        try {
+            const order = await ordersService.getOrdersByUserId(req.params.userId);
+            res.status(200).json({
+                success: true,
+                data: order
             });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
         }
+    }
 
-        console.log("USER DITEMUKAN! ID:", userMysql.id);
+    static async createOrder(req, res) {
+        try {
+            const order = await ordersService.createOrder({
+                user_id: req.body.user.id,
+                invoice_number: req.body.number ?? `INV-${Date.now()}-${req.body.user.id}`,
+                total_price: req.body.total_price,
+                shipping_address: req.body.shipping_address ?? null,
+                shipping_cost: req.body.shipping_cost ?? 0,
+                payment_status: "pending",
+                order_status: "processing",
+                snap_token: req.body.snap_token ?? "",
+                products: req.body.products || []
+            });
+            res.status(201).json({
+                success: true,
+                message: 'Berhasil membuat pesanan',
+                data: { order: order }
+            });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
 
-        const realUserId = userMysql.id;
+    static async updateOrder(req, res) {
+        try {
+            const orderId = req.params.id;
+            const order = await ordersService.updateOrder(orderId, {
+                payment_status: req.body.payment_status,
+                order_status: req.body.order_status,
+            });
+            res.status(200).json({
+                success: true,
+                message: `Berhasil memperbarui pesanan dengan id: ${orderId}`,
+                data: order
+            });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
 
-        const order = await ordersService.createOrder({
-            user_id: realUserId,
-            number: req.body.number ?? `INV-${Date.now()}-${realUserId}`,
-            total_price: req.body.total_price,
-            shipping_address: req.body.shipping_address ?? null,
-            shipping_cost: req.body.shipping_cost ?? 0,
-            payment_status: req.body.payment_status,
-            order_status: req.body.order_status,
-            snap_token: req.body.snap_token ?? "",
+    static async deleteOrder(req, res) {
+        try {
+            await ordersService.deleteOrder(req.params.id);
+            res.status(200).json({
+                success: true,
+                message: 'Pesanan berhasil dihapus'
+            });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+}
 
-            items: req.body.items || []
-        });
-
-        console.log("ORDER BERHASIL DISIMPAN KE DB!");
-
-        res.status(201).json({
-            success: true,
-            message: "Order berhasil disimpan.",
-            data: { orders: order }
-        });
-
-    } catch (error) {
-        console.error("ERROR FATAL:", error);
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    };
-};
-
-const updateOrder = async (req, res) => {
-    try {
-        const orderId = req.params.id;
-        const order = await ordersService.updateOrder(orderId, {
-            payment_status: req.body.payment_status,
-            order_status: req.body.order_status,
-            snap_token: req.body.snap_token
-        });
-
-        res.status(201).json({
-            success: true,
-            message: 'Berhasil membuat pesanan',
-            data: { order: order }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    };
-};
-
-const deleteOrder = async (req, res) => {
-    try {
-        await ordersService.deleteOrder(req.params.id);
-        res.status(200).json({
-            success: true,
-            message: 'Pesanan berhasil dihapus'
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
-    };
-};
-
-module.exports = {
-    getAllOrders,
-    getOrderById,
-    getOrdersByUserId,
-    createOrder,
-    updateOrder,
-    deleteOrder
-};
+module.exports = OrdersController;

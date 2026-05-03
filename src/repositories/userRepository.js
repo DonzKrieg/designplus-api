@@ -1,118 +1,83 @@
-const pool = require('../config/database');
+const User = require('../models/User');
 
 class UserRepository {
-    static async getUserWhislist(userId) {
-        const [rows] = await pool.query(`
-            SELECT
-                w.id AS wishlist_id,
-                p.id AS product_id,
-                p.nama,
-                p.harga,
-                p.file
-            FROM wishlists w
-            JOIN products p ON p.id = w.product_id
-            WHERE w.user_id = ?
-        `, [userId]);
+    static async create(userData) {
+        const newUser = new User(userData);
+        return await newUser.save();
+    }
 
-        return rows;
+    static async getUserWhislist(userId) {
+        const userWishlist = await User.findById(userId).populate({
+            path: 'wishlists'
+        });
+        return userWishlist.wishlists;
     }
 
     static async createWishlistEntry(userId, productId) {
-        const [result] = await pool.query(`
-            INSERT INTO wishlists (user_id, product_id)
-            VALUES (?, ?)
-        `, [userId, productId]);
-        return result.insertId;
-    }
-
-    static async deleteWishlist(id) {
-        await pool.query('DELETE FROM wishlists WHERE id = ?', [id]);
-    }
-
-    static async findByEmail(email) {
-        const [rows] = await pool.query(
-            'SELECT * FROM users WHERE email = ?',
-            [email]
+        const wishlistItem = await User.findByIdAndUpdate(
+            userId,
+            { $addToSet: { wishlists: productId } },
+            { new: true }
         );
-        return rows[0];
+        return wishlistItem;
+    }
+
+    static async deleteWishlist(userId, productId) {
+        const updateUser = await User.findByIdAndUpdate(
+            userId,
+            { $pull: { wishlists: productId } },
+            { new: true }
+        );
+        if(!updateUser) {
+            throw new Error('User tidak ditemukan');
+        }
+        return updateUser;
     }
 
     static async findAll() {
-        const [rows] = await pool.query('SELECT * FROM users');
-        return rows;
+        const users = await User.find();
+        return users;
+    }
+
+    static async findByEmail(email) {
+        const userByEmail = await User.findOne({email: email});
+        return userByEmail;
     }
 
     static async findById(id) {
-        const [rows] = await pool.query(
-            'SELECT * FROM users WHERE id = ?', [id]
-        );
-        return rows[0];
+        const userId = await User.findById(id);
+        return userId;
     }
 
-    static async findByFirebaseUid(firebaseUid) {
-        const [rows] = await pool.query(
-            'SELECT * FROM users WHERE firebase_uid = ?', [firebaseUid]
+    static async update(id, userData) {
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            userData,
+            { new: true }
         );
-        return rows[0];
-    }
-
-    // Nambah Bagian buat Update Firebase UID kalo user login pake email.
-    static async updateFirebaseUid(id, firebaseUid) {
-        await pool.query(
-          'UPDATE users SET firebase_uid = ? WHERE id = ?',
-          [firebaseUid, id]
-        );
-    }
-
-    // --- BAGIAN INI DIUPDATE ---
-    // Menerima firebase_uid dan phone agar sinkronisasi Mobile berjalan
-    static async create({ name, email, password, role, phone, firebase_uid }) {
-        const [result] = await pool.query(
-            'INSERT INTO users (name, email, password, role, phone, firebase_uid) VALUES (?, ?, ?, ?, ?, ?)',
-            [
-                name, 
-                email, 
-                password, 
-                role, 
-                phone || null,         // Jika kosong, set NULL
-                firebase_uid || null   // Jika kosong, set NULL
-            ]
-        );
-        return { id: result.insertId, name, email, role, phone, firebase_uid };
-    }
-    // ---------------------------
-
-    static async update(id, { name, full_name, phone, location, postal_code }) {
-        await pool.query(
-            'UPDATE users SET name = ?, full_name = ?, phone = ?, location = ?, postal_code = ? WHERE id = ?',
-            [name, full_name, phone, location, postal_code, id]
-        );
-        return { id, name, full_name, phone, location, postal_code };
-    }
-
-    static async updatePassword(id, hashedPassword) {
-        const [result] = await pool.query(
-            'UPDATE users SET password = ? WHERE id = ?',
-            [hashedPassword, id]
-        );
-
-        return result.affectedRows; 
+        return updatedUser;
     }
 
     static async updateRole(id, role) {
-        // PERBAIKAN BUG: Sebelumnya tertulis 'db.query', diganti jadi 'pool.query'
-        const [result] = await pool.query(
-            'UPDATE users SET role = ? WHERE id = ?',
-            [role, id]
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            { role: role },
+            { new: true }
         );
-
-        return result;
+        return updatedUser;
     }
 
+    static async updatePassword(id, hashedPassword) {
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            { password: hashedPassword },
+            { new: true }
+        );
+        return updatedUser;
+    }
 
     static async delete(id) {
-        await pool.query('DELETE FROM users WHERE id = ?', [id]);
-        return true;
+        await User.findByIdAndDelete(id);
     }
 }
 

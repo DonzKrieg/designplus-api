@@ -5,8 +5,8 @@ class CartController {
 
     static async index(req, res) {
         try {
-            const userId = req.user.uid;
-            const user = await UserService.getUserByFirebaseUid(userId);
+            const userId = req.user.id;
+            const user = await UserService.getUserById(userId);
 
             const cart = await CartService.getUserCart(user.id);
 
@@ -24,8 +24,8 @@ class CartController {
 
     static async store(req, res) {
         try {
-            const userId = req.user.uid;
-            const user = await UserService.getUserByFirebaseUid(userId);
+            const userId = req.user.id;
+            const user = await UserService.getUserById(userId);
             console.log('REQ USER:', req.user);
             console.log('REQ BODY:', req.body);
 

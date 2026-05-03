@@ -29,13 +29,18 @@ const userSchema = new mongoose.Schema(
     Location: {
       type: String,
     },
-    wishlist: [
+    postal_code: {
+      type: String,
+    },
+    wishlists: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
       },
-    ],
-  }, { timestamps: true });
+    ]
+  }, 
+  { timestamps: true }
+);
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;

@@ -1,38 +1,34 @@
 const productRepository = require('../repositories/productRepositories');
 
-const getAllProducts = async () => {
-    return await productRepository.getAllProducts();
-};
-
-const getProductById = async (id) => {
-    const product = await productRepository.getProductById(id);
-    if(!product){
-        throw new Error('Product tidak ditemukan');
+class ProductService {
+    static async createProduct(productData) {
+        if(!productData.name || !productData.price || !productData.category || !productData.product_image || !productData.rating ){
+            throw new Error('Semua data harus terisi');
+        }
+        return await productRepository.create(productData);
     }
-    return product;
-};
 
-const createProduct = async (product) => {
-    if(!product.nama || !product.harga || !product.kategori || !product.file || !product.rating ){
-        throw new Error('Semua data harus terisi');
+    static async getAllProducts() {
+        return await productRepository.getAllProducts();
     }
-    return await productRepository.createProduct(product);
-};
 
-const updateProduct = async (id, product) => {
-    await getProductById(id);
-    return await productRepository.updateProduct(id, product);
-};
+    static async getProductById(id) {
+        const product = await productRepository.getProductById(id);
+        if(!product){
+            throw new Error(`Product dengan id ${id} tidak ditemukan`);
+        }
+        return product;
+    }
 
-const deleteProduct = async (id) => {
-    await getProductById(id);
-    return await productRepository.deleteProduct(id);
-};
+    static async updateProduct(id, productData) {
+        await this.getProductById(id);
+        return await productRepository.update(id, productData);
+    }
 
-module.exports = {
-    getAllProducts,
-    getProductById,
-    createProduct,
-    updateProduct,
-    deleteProduct
-};
+    static async deleteProduct(id) {
+        await this.getProductById(id);
+        return await productRepository.deleteProduct(id);
+    }
+}
+
+module.exports = ProductService;

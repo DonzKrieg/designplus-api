@@ -11,7 +11,7 @@ class CartService {
             product_id: payload.product_id,
             quantity: payload.quantity || 1,
             material: payload.material,
-            warna: payload.warna,
+            color: payload.color,
             note: payload.note,
             custom_file: payload.custom_file,
             is_selected: 1
