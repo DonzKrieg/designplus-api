@@ -51,6 +51,38 @@ class UserService {
         return token;
     }
 
+    static async googleLoginOrRegister({ name, email, google_id, avatar }) {
+        // 1. Cari user berdasarkan email
+        let user = await UserRepository.findByEmail(email);
+
+        if (!user) {
+            // 2. Jika user tidak ditemukan, buat user baru (Register otomatis)
+            // Password dikosongkan atau diisi string acak karena login via Google
+            user = await UserRepository.create({
+                name,
+                email,
+                google_id,
+                avatar,
+                password: await bcrypt.hash(Math.random().toString(36), 10),
+                role: 'user'
+            });
+        } else {
+            // 3. Jika user ada tapi belum punya google_id, update google_id-nya
+            if (!user.google_id) {
+                user = await UserRepository.update(user.id, { google_id, avatar });
+            }
+        }
+
+        // 4. Generate JWT Token (samakan dengan logika login manual Anda)
+        const token = jwt.sign(
+            { id: user.id, email: user.email, name: user.name, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+        );
+
+        return { user, token };
+    }
+
     static async updatePassword(userId, currentPassword, newPassword) {
         const user = await UserRepository.findById(userId);
         if(!user) {

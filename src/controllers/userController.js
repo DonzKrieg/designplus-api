@@ -37,6 +37,32 @@ class UserController {
         }
     }
 
+    static async googleAuth(req, res) {
+        try {
+            const { name, email, google_id, avatar } = req.body;
+
+            // Panggil service untuk menangani logika pendaftaran/pencarian user Google
+            const { user, token } = await UserService.googleLoginOrRegister({
+                name,
+                email,
+                google_id,
+                avatar
+            });
+
+            res.status(200).json({
+                success: true,
+                message: "Google login berhasil",
+                token, // Token JWT untuk disimpan di session Laravel
+                data: user
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message,
+            });
+        }
+    }
+
     static async getUsers(req, res) {
         try {
             const users = await UserService.getAllUsers();

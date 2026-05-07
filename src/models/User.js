@@ -13,7 +13,18 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function() {
+        return !this.google_id; // Password wajib kalo google_id nggak ada
+      },
+    },
+    google_id: { 
+      type: String,
+      default: null,
+      sparse: true, // biar nggak error kalo banyak user yang google_id-nya null
+    },
+    avatar: { // Opsional, buat menyimpan foto profil Google
+      type: String,
+      default: null,
     },
     role: {
       type: String,

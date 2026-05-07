@@ -9,6 +9,7 @@ router.get('/users/:id', UserController.getUser);
 router.post('/users', UserController.createUser);
 router.post('/login', UserController.login);
 router.post('/register', UserController.register);
+router.post("/auth/google", UserController.googleAuth);
 router.get('/wishlists/me', authMiddleware, UserController.getUserWishlists);
 
 router.put('/users/password/me', authMiddleware, UserController.updatePassword);
